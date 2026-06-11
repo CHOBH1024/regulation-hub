@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { MainPanel } from './components/MainPanel';
+import { UploadModal } from './components/UploadModal';
 import { mockRegulations, type RegulationNode, type RegulationVersion } from './data/regulations';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Upload } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 
 function flattenRegulations(nodes: RegulationNode[]): RegulationNode[] {
   let list: RegulationNode[] = [];
@@ -17,6 +19,7 @@ function flattenRegulations(nodes: RegulationNode[]): RegulationNode[] {
 
 export default function App() {
   const [isDark, setIsDark] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<RegulationNode | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<RegulationVersion | null>(null);
 
@@ -63,8 +66,15 @@ export default function App() {
         
         {/* Main Panel */}
         <div className="flex-1 flex flex-col relative overflow-hidden">
-          {/* Header Theme Toggle */}
+          {/* Header Theme Toggle & Upload */}
           <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+            <button 
+              onClick={() => setIsUploadOpen(true)}
+              className="flex items-center px-3 py-2 rounded-full glass hover:bg-indigo-50 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium text-sm transition-colors shadow-sm"
+            >
+              <Upload size={16} className="mr-1.5" />
+              업로드
+            </button>
             <button 
               onClick={() => setIsDark(!isDark)}
               className="p-2 rounded-full glass hover:bg-white/50 dark:hover:bg-slate-800/50 transition-colors shadow-sm"
@@ -86,6 +96,18 @@ export default function App() {
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {isUploadOpen && (
+          <UploadModal 
+            onClose={() => setIsUploadOpen(false)} 
+            onSuccess={() => {
+              console.log('업로드 성공');
+              alert('업로드가 성공적으로 완료되었습니다! (현재 브라우저 캐시로 인해 새로고침하면 적용될 수 있습니다)');
+            }} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
