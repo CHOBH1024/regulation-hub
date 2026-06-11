@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-glass-bg: rgba(255, 255, 255, 0.85);
+  --color-glass-border: rgba(255, 255, 255, 0.6);
+  
+  --color-dark-glass-bg: rgba(15, 23, 42, 0.85);
+  --color-dark-glass-border: rgba(30, 41, 59, 0.7);
+}
+
+@layer base {
+  body {
+    @apply antialiased text-slate-800 bg-slate-50 transition-colors duration-300;
+  }
+  
+  .dark body {
+    @apply bg-slate-950 text-slate-200;
+  }
+
+  /* 커스텀 스크롤바 */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-slate-700;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-600;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-[var(--color-glass-bg)] backdrop-blur-xl border border-[var(--color-glass-border)] shadow-sm;
+  }
+  .dark .glass {
+    @apply bg-[var(--color-dark-glass-bg)] border-[var(--color-dark-glass-border)] shadow-none;
+  }
+}
