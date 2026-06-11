@@ -60,6 +60,26 @@ export const UploadModal = ({ onClose, onSuccess }: UploadModalProps) => {
     }
   };
 
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <motion.div 
@@ -80,7 +100,16 @@ export const UploadModal = ({ onClose, onSuccess }: UploadModalProps) => {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* File Input */}
-          <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/30">
+          <div 
+            className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center transition-colors ${
+              isDragging 
+                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' 
+                : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30'
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <input 
               type="file" 
               accept=".pdf" 
@@ -88,8 +117,10 @@ export const UploadModal = ({ onClose, onSuccess }: UploadModalProps) => {
               className="hidden" 
               id="pdf-upload"
             />
-            <label htmlFor="pdf-upload" className="cursor-pointer flex flex-col items-center">
-              <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-500/20 rounded-full flex items-center justify-center mb-3">
+            <label htmlFor="pdf-upload" className="cursor-pointer flex flex-col items-center w-full">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-colors ${
+                isDragging ? 'bg-indigo-200 dark:bg-indigo-500/40' : 'bg-indigo-100 dark:bg-indigo-500/20'
+              }`}>
                 <FileText size={24} className="text-indigo-600 dark:text-indigo-400" />
               </div>
               <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">PDF 파일 선택</span>
