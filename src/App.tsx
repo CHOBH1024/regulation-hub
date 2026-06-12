@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { MainPanel } from './components/MainPanel';
-import { UploadModal } from './components/UploadModal';
 import { mockRegulations, type RegulationNode, type RegulationVersion } from './data/regulations';
 import { Moon, Sun, Upload } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
 
 function flattenRegulations(nodes: RegulationNode[]): RegulationNode[] {
   let list: RegulationNode[] = [];
@@ -19,7 +17,6 @@ function flattenRegulations(nodes: RegulationNode[]): RegulationNode[] {
 
 export default function App() {
   const [isDark, setIsDark] = useState(false);
-  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<RegulationNode | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<RegulationVersion | null>(null);
 
@@ -69,11 +66,14 @@ export default function App() {
           {/* Header Theme Toggle & Upload */}
           <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
             <button 
-              onClick={() => setIsUploadOpen(true)}
+              onClick={() => {
+                alert("구글 설문지 링크를 이곳에 연결해 드릴 예정입니다! 뻠뻠님이 설문지를 다 만드신 후 링크를 주시면 바로 연결해 드리겠습니다.");
+                window.open('https://forms.google.com', '_blank');
+              }}
               className="flex items-center px-3 py-2 rounded-full glass hover:bg-indigo-50 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium text-sm transition-colors shadow-sm"
             >
               <Upload size={16} className="mr-1.5" />
-              업로드
+              업로드 (구글 폼)
             </button>
             <button 
               onClick={() => setIsDark(!isDark)}
@@ -96,18 +96,6 @@ export default function App() {
           )}
         </div>
       </div>
-
-      <AnimatePresence>
-        {isUploadOpen && (
-          <UploadModal 
-            onClose={() => setIsUploadOpen(false)} 
-            onSuccess={() => {
-              console.log('업로드 성공');
-              alert('업로드가 성공적으로 완료되었습니다! (현재 브라우저 캐시로 인해 새로고침하면 적용될 수 있습니다)');
-            }} 
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
