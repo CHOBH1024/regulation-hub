@@ -1,20 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { MainPanel } from './components/MainPanel';
+import { TableView } from './components/TableView';
 import { UploadModal } from './components/UploadModal';
 import { mockRegulations, type RegulationNode, type RegulationVersion } from './data/regulations';
-import { Moon, Sun, Upload } from 'lucide-react';
+import { Moon, Sun, Upload, LayoutList, LayoutGrid } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 
 function flattenRegulations(nodes: RegulationNode[]): RegulationNode[] {
-  let list: RegulationNode[] = [];
-  nodes.forEach(node => {
-    list.push(node);
-    if (node.children) {
-      list = list.concat(flattenRegulations(node.children));
-    }
-  });
-  return list;
+  return nodes.flatMap(n => [n, ...flattenRegulations(n.children ?? [])]);
 }
 
 export default function App() {
@@ -22,76 +16,91 @@ export default function App() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<RegulationNode | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<RegulationVersion | null>(null);
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('favorites') ?? '[]'); } catch { return []; }
+  });
+  const [isTableMode, setIsTableMode] = useState(false);
 
-  // Initialize selected node
   useEffect(() => {
-    const flatList = flattenRegulations(mockRegulations);
-    if (flatList.length > 0) {
-      handleSelectNode(flatList[0]);
-    }
+    const flat = flattenRegulations(mockRegulations);
+    if (flat.length > 0) handleSelectNode(flat[0]);
   }, []);
 
-  // Theme toggle
   useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
 
   const handleSelectNode = (node: RegulationNode) => {
     setSelectedNode(node);
-    if (node.versions && node.versions.length > 0) {
-      setSelectedVersion(node.versions[0]);
-    } else {
-      setSelectedVersion(null);
-    }
+    setSelectedVersion(node.versions?.[0] ?? null);
   };
 
-  const handleSelectVersion = (version: RegulationVersion) => {
-    setSelectedVersion(version);
+  const handleToggleFavorite = (id: string) => {
+    setFavorites(prev => {
+      const next = prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id];
+      localStorage.setItem('favorites', JSON.stringify(next));
+      return next;
+    });
   };
 
   return (
     <div className={`flex h-screen w-full overflow-hidden ${isDark ? 'dark' : ''}`}>
       <div className="flex w-full h-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-300">
-        
-        {/* Sidebar */}
-        <Sidebar 
-          data={mockRegulations} 
-          selectedNodeId={selectedNode?.id} 
-          onSelect={handleSelectNode} 
+
+        <Sidebar
+          data={mockRegulations}
+          selectedNodeId={selectedNode?.id}
+          favorites={favorites}
+          onSelect={handleSelectNode}
+          onToggleFavorite={handleToggleFavorite}
         />
-        
-        {/* Main Panel */}
+
         <div className="flex-1 flex flex-col relative overflow-hidden">
-          {/* Header Theme Toggle & Upload */}
+          {/* Toolbar */}
           <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
-            <button 
-              onClick={() => setIsUploadOpen(true)}
-              className="flex items-center px-3 py-2 rounded-full glass hover:bg-indigo-50 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium text-sm transition-colors shadow-sm"
+            <button
+              onClick={() => setIsTableMode(m => !m)}
+              className={`flex items-center px-3 py-2 rounded-full text-sm font-medium transition-colors shadow-sm border ${
+                isTableMode
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+              }`}
             >
-              <Upload size={16} className="mr-1.5" />
+              {isTableMode ? <LayoutGrid size={15} className="mr-1.5" /> : <LayoutList size={15} className="mr-1.5" />}
+              {isTableMode ? '뷰어 모드' : '테이블 모드'}
+            </button>
+            <button
+              onClick={() => setIsUploadOpen(true)}
+              className="flex items-center px-3 py-2 rounded-full bg-white/80 dark:bg-slate-800/80 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-medium text-sm transition-colors shadow-sm border border-slate-200 dark:border-slate-700"
+            >
+              <Upload size={15} className="mr-1.5" />
               업로드
             </button>
-            <button 
+            <button
               onClick={() => setIsDark(!isDark)}
-              className="p-2 rounded-full glass hover:bg-white/50 dark:hover:bg-slate-800/50 transition-colors shadow-sm"
+              className="p-2 rounded-full bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 transition-colors shadow-sm border border-slate-200 dark:border-slate-700"
             >
-              {isDark ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-slate-600" />}
+              {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-slate-600" />}
             </button>
           </div>
-          
-          {selectedNode ? (
-            <MainPanel 
-              node={selectedNode} 
-              selectedVersion={selectedVersion} 
-              onSelectVersion={handleSelectVersion} 
+
+          {isTableMode ? (
+            <TableView
+              data={mockRegulations}
+              favorites={favorites}
+              onSelect={handleSelectNode}
+              onToggleFavorite={handleToggleFavorite}
+              onSwitchToViewer={() => setIsTableMode(false)}
+            />
+          ) : selectedNode ? (
+            <MainPanel
+              node={selectedNode}
+              selectedVersion={selectedVersion}
+              onSelectVersion={setSelectedVersion}
             />
           ) : (
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-slate-500">규정을 선택해주세요.</p>
+              <p className="text-slate-400">규정을 선택해주세요.</p>
             </div>
           )}
         </div>
@@ -99,12 +108,9 @@ export default function App() {
 
       <AnimatePresence>
         {isUploadOpen && (
-          <UploadModal 
-            onClose={() => setIsUploadOpen(false)} 
-            onSuccess={() => {
-              console.log('업로드 성공');
-              alert('업로드가 성공적으로 완료되었습니다! (현재 브라우저 캐시로 인해 새로고침하면 적용될 수 있습니다)');
-            }} 
+          <UploadModal
+            onClose={() => setIsUploadOpen(false)}
+            onSuccess={() => console.log('업로드 성공')}
           />
         )}
       </AnimatePresence>

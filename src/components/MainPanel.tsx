@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { RegulationNode, RegulationVersion } from '../data/regulations';
-import { Clock, User, AlertCircle, FileText, ChevronDown, MessageSquare, X, Save } from 'lucide-react';
+import { Clock, User, AlertCircle, FileText, ChevronDown, MessageSquare, X, Save, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CustomPdfViewer } from './CustomPdfViewer';
 
@@ -92,6 +92,20 @@ export const MainPanel = ({ node, selectedVersion, onSelectVersion }: MainPanelP
               )}
             </div>
             
+            {/* Progress bar */}
+            {node.progress !== undefined && (
+              <div className="mt-3 flex items-center gap-3">
+                <TrendingUp size={14} className="text-indigo-400 shrink-0" />
+                <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${node.progress === 100 ? 'bg-emerald-500' : node.progress >= 50 ? 'bg-indigo-500' : 'bg-amber-400'}`}
+                    style={{ width: `${node.progress}%` }}
+                  />
+                </div>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300 w-10 text-right">{node.progress}%</span>
+              </div>
+            )}
+
             {node.issues && node.issues.length > 0 && (
               <div className="mt-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3">
                 <div className="flex items-center text-sm font-semibold text-amber-700 dark:text-amber-400 mb-1">

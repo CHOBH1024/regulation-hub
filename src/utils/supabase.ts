@@ -6,14 +6,12 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishabl
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const uploadPdf = async (file: File, path: string) => {
-  if (supabaseUrl.includes('placeholder')) {
-    console.warn('Supabase is not configured. Simulating upload...');
-    return { data: { path: `/pdfs/${file.name}` }, error: null };
-  }
-
   const { data, error } = await supabase.storage
     .from('pdfs')
     .upload(path, file, { upsert: true });
-    
-  return { data, error };
+
+  if (error) return { data: null, publicUrl: null, error };
+
+  const { data: urlData } = supabase.storage.from('pdfs').getPublicUrl(path);
+  return { data, publicUrl: urlData.publicUrl, error: null };
 };

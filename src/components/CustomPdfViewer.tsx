@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { pdfjs, Document, Page } from 'react-pdf';
-import { MessageSquare, X, Check } from 'lucide-react';
+import { MessageSquare, X, Check, Maximize2, Minimize2, Download, Printer } from 'lucide-react';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -29,6 +29,33 @@ export const CustomPdfViewer = ({ pdfPath }: CustomPdfViewerProps) => {
   const [activePin, setActivePin] = useState<{ pageIndex: number; x: number; y: number } | null>(null);
   const [newMemoContent, setNewMemoContent] = useState('');
   const [isModeAdd, setIsModeAdd] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleFullscreen = () => {
+    if (!isFullscreen) {
+      containerRef.current?.requestFullscreen?.();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen?.();
+      setIsFullscreen(false);
+    }
+  };
+
+  const handleDownload = () => {
+    const a = document.createElement('a');
+    a.href = pdfPath;
+    a.download = pdfPath.split('/').pop() ?? 'regulation.pdf';
+    a.click();
+  };
+
+  const handlePrint = () => {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = pdfPath;
+    document.body.appendChild(iframe);
+    iframe.onload = () => { iframe.contentWindow?.print(); };
+  };
 
   useEffect(() => {
     // Load annotations for this pdf
@@ -74,21 +101,33 @@ export const CustomPdfViewer = ({ pdfPath }: CustomPdfViewerProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-200 dark:bg-slate-900 overflow-hidden relative rounded-xl">
+    <div ref={containerRef} className="flex flex-col h-full bg-slate-200 dark:bg-slate-900 overflow-hidden relative rounded-xl">
       {/* Top Toolbar */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center bg-white/90 dark:bg-slate-800/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-slate-200 dark:border-slate-700">
-        <span className="text-sm font-medium mr-4 text-slate-700 dark:text-slate-300">
-          페이지별 메모(마커) 남기기:
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-slate-200 dark:border-slate-700">
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 mr-2">
+          마커:
         </span>
         <button
           onClick={() => setIsModeAdd(!isModeAdd)}
-          className={`flex items-center px-3 py-1.5 rounded-full text-sm font-bold transition-colors ${
-            isModeAdd 
-              ? 'bg-rose-500 text-white shadow-inner' 
-              : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+          className={`flex items-center px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
+            isModeAdd
+              ? 'bg-rose-500 text-white'
+              : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
           }`}
         >
-          {isModeAdd ? '마커 찍기 모드 ON' : '마커 모드 켜기'}
+          {isModeAdd ? '모드 ON' : '켜기'}
+        </button>
+
+        <div className="w-px h-4 bg-slate-300 dark:bg-slate-600 mx-1" />
+
+        <button onClick={handlePrint} title="인쇄" className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors">
+          <Printer size={15} />
+        </button>
+        <button onClick={handleDownload} title="다운로드" className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors">
+          <Download size={15} />
+        </button>
+        <button onClick={handleFullscreen} title="전체화면" className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors">
+          {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
         </button>
       </div>
 

@@ -39,17 +39,13 @@ export const UploadModal = ({ onClose, onSuccess }: UploadModalProps) => {
     try {
       // 1. Storage Upload
       const filePath = `regulations/${formData.regulationId}_${formData.version}.pdf`;
-      const { data: uploadData, error: uploadError } = await uploadPdf(file, filePath);
-      
+      const { publicUrl, error: uploadError } = await uploadPdf(file, filePath);
+
       if (uploadError) throw uploadError;
 
-      // 2. Mock DB Update (추후 Supabase DB 연결 시 실제 테이블 Insert 코드로 교체)
-      console.log('업로드 완료 데이터:', {
-        ...formData,
-        pdfPath: uploadData?.path
-      });
-      
-      alert('업로드가 완료되었습니다. (현재 Supabase Key 미입력으로 콘솔에만 기록됨)');
+      // 2. TODO: Supabase DB Insert (regulation_versions 테이블 연결 시 활성화)
+      console.log('업로드 완료:', { ...formData, publicUrl });
+
       onSuccess();
       onClose();
     } catch (error) {
